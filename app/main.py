@@ -403,17 +403,25 @@ async def download_all_zip(request: Request, upload_id: str):
 
     files_dir = get_upload_dir(upload_id) / "files"
 
-    def generator():
-        stream = ZipStream()
-        for f in files:
-            path = files_dir / f["id"]
-            if path.exists():
-                stream.add_path(path, arcname=f["name"])
-        yield from stream
+    tmp_zip = tempfile.NamedTemporaryFile(delete=False, suffix=".zip")
+    tmp_zip.close()
+
+    try:
+        with zipfile.ZipFile(tmp_zip.name, "w", zipfile.ZIP_DEFLATED) as zf:
+            for f in files:
+                path = files_dir / f["id"]
+                if path.exists():
+                    zf.write(path, arcname=f["name"])
+    except Exception as e:
+        if os.path.exists(tmp_zip.name):
+            os.unlink(tmp_zip.name)
+        logger.error(f"Failed to create ZIP for {upload_id}: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка сборки архива")
 
     zip_filename = f"files_{upload_id[:8]}.zip"
-    headers = {
-        "Content-Disposition": f'attachment; filename="{zip_filename}"',
-        "Content-Type": "application/zip",
-    }
-    return StreamingResponse(generator(), headers=headers)
+    return FileResponse(
+        path=tmp_zip.name,
+        filename=zip_filename,
+        media_type="application/zip",
+        background=BackgroundTask(lambda: os.unlink(tmp_zip.name) if os.path.exists(tmp_zip.name) else None),
+    )

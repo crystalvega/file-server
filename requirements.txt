@@ -6,4 +6,3 @@ python-multipart>=0.0.17
 pydantic>=2.9.2
 pydantic-settings>=2.6.1
 httpx>=0.27.2
-zipstream-ng>=1.8.0

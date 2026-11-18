@@ -29,7 +29,9 @@ from fastapi.responses import (
     StreamingResponse,
 )
 from fastapi.templating import Jinja2Templates
-from zipstream_ng import ZipStream
+import tempfile
+import zipfile
+from starlette.background import BackgroundTask
 
 from app.config import settings
 from app.security import (

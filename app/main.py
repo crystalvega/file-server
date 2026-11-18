@@ -98,6 +98,7 @@ app.add_middleware(
 )
 
 @app.get("/health")
+@app.get(f"{settings.URL_PREFIX}/health")
 def health_check():
     return {"status": "healthy", "service": "file-server"}
 
@@ -232,9 +233,9 @@ async def api_upload(
 @app.get(f"{settings.URL_PREFIX}", response_class=HTMLResponse)
 def index_upload_page(request: Request):
     return templates.TemplateResponse(
-        "upload.html",
-        {
-            "request": request,
+        request=request,
+        name="upload.html",
+        context={
             "prefix": settings.URL_PREFIX,
         },
     )
@@ -244,9 +245,9 @@ async def view_download_page(request: Request, upload_id: str):
     meta = await load_metadata(upload_id)
     if not meta or is_expired(meta):
         return templates.TemplateResponse(
-            "error.html",
-            {
-                "request": request,
+            request=request,
+            name="error.html",
+            context={
                 "prefix": settings.URL_PREFIX,
                 "title": "Файлы не найдены или удалены",
                 "message": "Срок временного хранения файлов (28 дней) истек, либо указана неверная ссылка.",
@@ -258,9 +259,9 @@ async def view_download_page(request: Request, upload_id: str):
     if is_locked(meta):
         rem_min = max(1, int((meta["locked_until"] - time.time()) / 60))
         return templates.TemplateResponse(
-            "download.html",
-            {
-                "request": request,
+            request=request,
+            name="download.html",
+            context={
                 "upload_id": upload_id,
                 "prefix": settings.URL_PREFIX,
                 "is_authenticated": False,
@@ -278,9 +279,9 @@ async def view_download_page(request: Request, upload_id: str):
     expires_str = expires_dt.strftime("%d.%m.%Y в %H:%M")
 
     return templates.TemplateResponse(
-        "download.html",
-        {
-            "request": request,
+        request=request,
+        name="download.html",
+        context={
             "upload_id": upload_id,
             "prefix": settings.URL_PREFIX,
             "is_authenticated": is_authed,
@@ -305,9 +306,9 @@ async def verify_download_pin(
     if is_locked(meta):
         rem_min = max(1, int((meta["locked_until"] - time.time()) / 60))
         return templates.TemplateResponse(
-            "download.html",
-            {
-                "request": request,
+            request=request,
+            name="download.html",
+            context={
                 "upload_id": upload_id,
                 "prefix": settings.URL_PREFIX,
                 "is_authenticated": False,
@@ -341,9 +342,9 @@ async def verify_download_pin(
             error_msg = f"Превышено количество попыток. Доступ заблокирован на {settings.RATE_LIMIT_LOCKOUT_MINUTES} минут."
 
         return templates.TemplateResponse(
-            "download.html",
-            {
-                "request": request,
+            request=request,
+            name="download.html",
+            context={
                 "upload_id": upload_id,
                 "prefix": settings.URL_PREFIX,
                 "is_authenticated": False,

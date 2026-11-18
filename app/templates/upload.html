@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Загрузка файлов{% endblock %}
+{% block subtitle %}Временный защищенный обмен большими файлами{% endblock %}
+
+{% block head %}
+<style>
+    .dropzone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 36px 20px;
+        text-align: center;
+        background: #f8fafc;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 20px;
+    }
+    .dropzone:hover, .dropzone.dragover {
+        border-color: var(--primary);
+        background: #eff6ff;
+    }
+    .dropzone svg {
+        color: var(--primary);
+        margin-bottom: 12px;
+    }
+    .form-group {
+        margin-bottom: 16px;
+    }
+    .form-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--text-main);
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        outline: none;
+        background: #ffffff;
+    }
+    .form-control:focus {
+        border-color: var(--primary);
+    }
+    .file-queue {
+        list-style: none;
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .file-queue-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: #f1f5f9;
+        border-radius: 6px;
+        font-size: 0.85rem;
+    }
+    .result-box {
+        display: none;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 18px;
+        margin-top: 20px;
+    }
+    .code-box {
+        background: #ffffff;
+        border: 1px solid #bbf7d0;
+        border-radius: 6px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        word-break: break-all;
+        margin: 10px 0;
+        white-space: pre-wrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="uploadView">
+    <div class="dropzone" id="dropzone">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <div style="font-weight: 600; font-size: 1rem; margin-bottom: 4px;">Перетащите файлы сюда или нажмите для выбора</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">Любые файлы до 10 ГБ (до 20 файлов в одном пакете)</div>
+        <input type="file" id="fileInput" multiple style="display: none;">
+    </div>
+
+    <ul class="file-queue" id="fileQueue"></ul>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="form-group">
+            <label class="form-label">Срок хранения</label>
+            <select id="ttlDays" class="form-control">
+                <option value="28" selected>28 дней (максимум)</option>
+                <option value="14">14 дней</option>
+                <option value="7">7 дней</option>
+                <option value="3">3 дня</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">PIN-код (опционально)</label>
+            <input type="text" id="customPin" class="form-control" placeholder="Авто (6 цифр)" maxlength="16">
+        </div>
+    </div>
+
+    <button id="uploadBtn" class="btn btn-primary btn-block" disabled>Загрузить файлы</button>
+</div>
+
+<div class="result-box" id="resultBox">
+    <div style="font-weight: 700; color: #166534; font-size: 1.05rem; margin-bottom: 6px;">Файлы успешно загружены!</div>
+    <div style="font-size: 0.85rem; color: #15803d; margin-bottom: 12px;">Скопируйте текст ниже и вставьте в письмо получателю:</div>
+    <div class="code-box" id="copyText"></div>
+    <button class="btn btn-secondary btn-block" id="copyBtn">Скопировать в буфер обмена</button>
+    <a href="{{ prefix }}/" class="btn btn-secondary btn-block" style="margin-top: 10px;">Загрузить другие файлы</a>
+</div>
+
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileQueue = document.getElementById('fileQueue');
+    const uploadBtn = document.getElementById('uploadBtn');
+    let selectedFiles = [];
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    ['dragenter', 'dragover'].forEach(name => {
+        dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(name => {
+        dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+
+    function handleFiles(files) {
+        selectedFiles = Array.from(files);
+        renderQueue();
+    }
+
+    function renderQueue() {
+        fileQueue.innerHTML = '';
+        if (selectedFiles.length === 0) {
+            uploadBtn.disabled = true;
+            return;
+        }
+        uploadBtn.disabled = false;
+        selectedFiles.forEach((f, idx) => {
+            const li = document.createElement('li');
+            li.className = 'file-queue-item';
+            const sizeStr = (f.size / (1024 * 1024)).toFixed(1) + ' МБ';
+            li.innerHTML = `<span><b>${f.name}</b> (${sizeStr})</span> <span style="cursor:pointer; color:#ef4444; font-weight:bold;" onclick="removeFile(${idx})">&times;</span>`;
+            fileQueue.appendChild(li);
+        });
+    }
+
+    window.removeFile = function(idx) {
+        selectedFiles.splice(idx, 1);
+        renderQueue();
+    };
+
+    uploadBtn.addEventListener('click', async () => {
+        if (selectedFiles.length === 0) return;
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Загрузка...';
+
+        const formData = new FormData();
+        selectedFiles.forEach(f => formData.append('files', f));
+        formData.append('ttl_days', document.getElementById('ttlDays').value);
+        const pin = document.getElementById('customPin').value.trim();
+        if (pin) formData.append('pin', pin);
+
+        try {
+            const res = await fetch('{{ prefix }}/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Ошибка загрузки');
+
+            document.getElementById('uploadView').style.display = 'none';
+            document.getElementById('resultBox').style.display = 'block';
+
+            const emailSnippet = `📎 Вложенные файлы (доступны до ${new Date(data.expires_at).toLocaleDateString('ru-RU')}):\n` +
+                data.files.map(f => `  • ${f.name} (${f.formatted_size})`).join('\n') +
+                `\n\n👉 Ссылка для скачивания: ${data.url}\n` +
+                `🔑 Код доступа: ${data.pin}`;
+
+            document.getElementById('copyText').textContent = emailSnippet;
+        } catch (err) {
+            alert('Ошибка: ' + err.message);
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Загрузить файлы';
+        }
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(document.getElementById('copyText').textContent);
+        alert('Текст скопирован!');
+    });
+</script>
+{% endblock %}

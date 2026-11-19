@@ -113,6 +113,24 @@ async def api_upload(
     pin: Annotated[str | None, Form()] = None,
     ttl_days: Annotated[int | None, Form()] = None,
 ):
+    # Verify API Key if configured (protects server from unauthorized abuse)
+    if settings.API_KEY:
+        auth_header = (
+            request.headers.get("X-API-Key")
+            or request.headers.get("Authorization")
+            or ""
+        )
+        token = auth_header.strip()
+        if token.lower().startswith("bearer "):
+            token = token[7:].strip()
+        if not token or not secrets.compare_digest(token, settings.API_KEY.strip()):
+            client_ip = request.client.host if request.client else "unknown"
+            logger.warning(f"Unauthorized upload attempt from {client_ip}")
+            raise HTTPException(
+                status_code=401,
+                detail="Доступ запрещен. Неверный или отсутствует API-ключ авторизации.",
+            )
+
     if not files:
         raise HTTPException(status_code=400, detail="Не выбраны файлы для загрузки")
 
@@ -231,12 +249,13 @@ async def api_upload(
 @app.get("/", response_class=HTMLResponse)
 @app.get(f"{settings.URL_PREFIX}/", response_class=HTMLResponse)
 @app.get(f"{settings.URL_PREFIX}", response_class=HTMLResponse)
-def index_upload_page(request: Request):
+def index_info_page(request: Request):
     return templates.TemplateResponse(
         request=request,
-        name="upload.html",
+        name="index.html",
         context={
             "prefix": settings.URL_PREFIX,
+            "app_name": settings.APP_NAME,
         },
     )
 

@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_LOCKOUT_MINUTES: int = 15
     SESSION_COOKIE_NAME: str = "file_share_auth"
     SESSION_MAX_AGE_HOURS: int = 2
+    API_KEY: str = os.getenv("API_KEY", os.getenv("FILE_SERVER_API_KEY", ""))
     YARA_SCANNER_URL: str = os.getenv("YARA_SCANNER_URL", "")  # e.g. "http://yara.szma-inform.ru/scan" or internal
     CLEANUP_INTERVAL_MINUTES: int = 60
 

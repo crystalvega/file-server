@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Корпоративное защищенное хранилище &bull; Bulwark Mail Drop{% endblock %}
+
+{% block icon %}
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <path d="m9 12 2 2 4-4"/>
+</svg>
+{% endblock %}
+
+{% block card_title %}Хранилище файлов Bulwark Mail Drop{% endblock %}
+{% block card_subtitle %}Корпоративный сервис передачи больших вложений{% endblock %}
+
+{% block content %}
+<div style="padding: 6px 0 16px;">
+    <div class="alert alert-info" style="margin-bottom: 24px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4"/>
+            <path d="M12 8h.01"/>
+        </svg>
+        <div>
+            <strong>Защита от стороннего доступа:</strong> Загрузка файлов на данный сервер разрешена исключительно авторизованным сотрудникам через плагин почты Bulwark.
+        </div>
+    </div>
+
+    <div style="margin-bottom: 24px; text-align: left; font-size: 0.9rem; line-height: 1.6; color: var(--foreground);">
+        <p style="margin-bottom: 12px; font-weight: 600;">Как отправить файлы:</p>
+        <ol style="margin: 0 0 18px 0; padding-left: 20px; color: var(--muted-foreground);">
+            <li style="margin-bottom: 8px;">
+                Откройте редактор письма в <strong>Bulwark Webmail</strong>.
+            </li>
+            <li style="margin-bottom: 8px;">
+                Нажмите кнопку <strong>«Файловый сервер»</strong> в нижней панели или выберите пункт в меню скрепки 📎.
+            </li>
+            <li style="margin-bottom: 8px;">
+                Выберите файлы любого размера (до 10 ГБ) — ссылка и 6-значный PIN-код автоматически добавятся в письмо.
+            </li>
+        </ol>
+
+        <p style="margin-bottom: 8px; font-weight: 600;">Получили ссылку на файл?</p>
+        <p style="margin: 0; color: var(--muted-foreground);">
+            Перейдите по прямой ссылке из письма (вида <code>{{ prefix }}/[код_файла]</code>) и введите 6-значный код доступа (PIN).
+        </p>
+    </div>
+
+    <div style="margin-top: 24px; text-align: center;">
+        <a href="/webmail" class="btn btn-primary btn-lg" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <span>Перейти в почту Bulwark</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

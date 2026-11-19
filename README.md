@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icon.svg" width="128" height="128" alt="Bulwark Mail Drop Icon" />
+</p>
+
 # Bulwark Mail Drop - Secure Temporary File Server
 
 A high-performance, secure temporary file storage microservice for **Bulwark Webmail (Mail Drop)**. Designed to handle large email attachments with automatic TTL expiration, PIN-code access protection, brute-force throttling, and responsive theme matching.

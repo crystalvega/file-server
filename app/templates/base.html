@@ -2,160 +2,515 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Корпоративное хранилище файлов{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}Корпоративное хранилище файлов{% endblock %} &bull; Bulwark</title>
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('bulwark_file_theme') || 'system';
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (savedTheme === 'dark' || (savedTheme === 'system' && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            
+            /* Bulwark Light Theme */
+            --background: #ffffff;
+            --body-bg: #f8fafc;
+            --foreground: #0f172a;
+            --card: #ffffff;
+            --card-foreground: #0f172a;
+            --card-border: #e2e8f0;
             --border: #e2e8f0;
-            --danger: #ef4444;
-            --success: #10b981;
-            --radius: 12px;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+            --input: #ffffff;
+            --input-border: #e2e8f0;
+            --input-focus: #185aea;
+            --ring: #185aea;
+            
+            --primary: #185aea;
+            --primary-hover: #144bc6;
+            --primary-foreground: #ffffff;
+            
+            --secondary: #f1f5f9;
+            --secondary-hover: #e2e8f0;
+            --secondary-foreground: #0f172a;
+            
+            --muted: #f1f5f9;
+            --muted-foreground: #64748b;
+            
+            --accent: #dbeafe;
+            --accent-foreground: #1e40af;
+            
+            --destructive: #dc2626;
+            --destructive-bg: #fef2f2;
+            --destructive-border: #fecaca;
+            --destructive-foreground: #dc2626;
+            
+            --warning: #ca8a04;
+            --warning-bg: #fefce8;
+            --warning-border: #fef08a;
+            
+            --success: #16a34a;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            
+            --radius-sm: 6px;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
         }
+
+        .dark {
+            /* Bulwark Dark Theme */
+            --background: #0a0a0a;
+            --body-bg: #09090b;
+            --foreground: #fafafa;
+            --card: #141414;
+            --card-foreground: #fafafa;
+            --card-border: rgba(255, 255, 255, 0.12);
+            --border: rgba(255, 255, 255, 0.12);
+            --input: #171717;
+            --input-border: rgba(255, 255, 255, 0.18);
+            --input-focus: #3b82f6;
+            --ring: #3b82f6;
+            
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-foreground: #ffffff;
+            
+            --secondary: #262626;
+            --secondary-hover: #333333;
+            --secondary-foreground: #fafafa;
+            
+            --muted: #1e1e1e;
+            --muted-foreground: #a1a1aa;
+            
+            --accent: #1e3a8a;
+            --accent-foreground: #dbeafe;
+            
+            --destructive: #ef4444;
+            --destructive-bg: rgba(239, 68, 68, 0.15);
+            --destructive-border: rgba(239, 68, 68, 0.3);
+            --destructive-foreground: #fca5a5;
+            
+            --warning: #eab308;
+            --warning-bg: rgba(234, 179, 8, 0.15);
+            --warning-border: rgba(234, 179, 8, 0.3);
+            
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.15);
+            --success-border: rgba(34, 197, 94, 0.3);
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+            --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
+
         body {
-            background-color: var(--bg);
-            color: var(--text-main);
+            background-color: var(--body-bg);
+            color: var(--foreground);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Top Navbar matching Bulwark */
+        .navbar {
+            height: 56px;
+            background-color: var(--background);
+            border-bottom: 1px solid var(--border);
+            display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(8px);
         }
-        .container {
-            width: 100%;
-            max-width: 580px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 32px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .brand {
+
+        .navbar-brand {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 8px;
+            color: var(--foreground);
             text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: -0.01em;
         }
-        .brand svg {
+
+        .navbar-brand svg {
             color: var(--primary);
         }
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.4;
+
+        .navbar-brand .brand-sub {
+            color: var(--muted-foreground);
+            font-weight: 400;
+            font-size: 0.85rem;
+            margin-left: 4px;
+            padding-left: 8px;
+            border-left: 1px solid var(--border);
         }
+
+        /* Segmented Theme Switch */
+        .theme-switch {
+            display: inline-flex;
+            align-items: center;
+            background: var(--muted);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            padding: 2px;
+            gap: 1px;
+        }
+
+        .theme-btn {
+            background: transparent;
+            border: none;
+            color: var(--muted-foreground);
+            width: 30px;
+            height: 28px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .theme-btn:hover {
+            color: var(--foreground);
+        }
+
+        .theme-btn.active {
+            background: var(--card);
+            color: var(--foreground);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Layout Container */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 560px;
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            padding: 28px;
+            position: relative;
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--muted);
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: var(--foreground);
+            margin-bottom: 6px;
+        }
+
+        .card-subtitle {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+            line-height: 1.45;
+        }
+
+        /* Buttons matching Bulwark */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 10px 18px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            border-radius: 8px;
-            border: none;
+            padding: 9px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
             cursor: pointer;
-            transition: all 0.15s ease-in-out;
+            transition: all 0.15s ease;
             text-decoration: none;
+            line-height: 1.25;
+            user-select: none;
         }
+
         .btn-primary {
             background-color: var(--primary);
-            color: #ffffff;
+            color: var(--primary-foreground);
+            box-shadow: var(--shadow-sm);
         }
-        .btn-primary:hover {
+
+        .btn-primary:hover:not(:disabled) {
             background-color: var(--primary-hover);
         }
+
+        .btn-primary:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
         .btn-secondary {
-            background-color: #f1f5f9;
-            color: var(--text-main);
-            border: 1px solid var(--border);
+            background-color: var(--secondary);
+            color: var(--secondary-foreground);
+            border-color: var(--border);
         }
-        .btn-secondary:hover {
-            background-color: #e2e8f0;
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--secondary-hover);
         }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--foreground);
+            border-color: var(--border);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background-color: var(--muted);
+        }
+
         .btn-block {
             width: 100%;
         }
+
+        .btn-lg {
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            border-radius: var(--radius);
+        }
+
+        /* Alerts & Badges */
+        .alert {
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .alert-danger {
+            background-color: var(--destructive-bg);
+            color: var(--destructive-foreground);
+            border: 1px solid var(--destructive-border);
+        }
+
+        .alert-warning {
+            background-color: var(--warning-bg);
+            color: var(--warning);
+            border: 1px solid var(--warning-border);
+        }
+
+        .alert-success {
+            background-color: var(--success-bg);
+            color: var(--success);
+            border: 1px solid var(--success-border);
+        }
+
         .badge {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 9999px;
+            font-size: 0.775rem;
             font-weight: 500;
         }
+
         .badge-warning {
-            background-color: #fef3c7;
-            color: #92400e;
+            background-color: var(--warning-bg);
+            color: var(--warning);
+            border: 1px solid var(--warning-border);
         }
-        .badge-info {
-            background-color: #e0f2fe;
-            color: #0369a1;
+
+        .badge-muted {
+            background-color: var(--muted);
+            color: var(--muted-foreground);
+            border: 1px solid var(--border);
         }
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+
+        /* Form elements */
+        .form-label {
+            display: block;
+            font-size: 0.825rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--foreground);
         }
-        .alert-danger {
-            background-color: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #fca5a5;
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--input);
+            color: var(--foreground);
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
+
+        .form-control:focus {
+            border-color: var(--ring);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Footer */
         .footer {
-            margin-top: 24px;
+            padding: 18px;
             text-align: center;
             font-size: 0.8rem;
-            color: var(--text-muted);
+            color: var(--muted-foreground);
+            border-top: 1px solid var(--border);
+            background-color: var(--background);
         }
     </style>
     {% block head %}{% endblock %}
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <a href="#" class="brand">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
+    <header class="navbar">
+        <a href="/webmail" class="navbar-brand">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+            </svg>
+            <span>Bulwark Mail</span>
+            <span class="brand-sub">Файлы</span>
+        </a>
+
+        <!-- Segmented Theme Switch: Auto / Light / Dark -->
+        <div class="theme-switch" role="group" aria-label="Переключение темы">
+            <button type="button" class="theme-btn" id="theme-system" title="Автоматически (по системе)" onclick="setTheme('system')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="20" height="14" x="2" y="3" rx="2"/>
+                    <line x1="8" x2="16" y1="21" y2="21"/>
+                    <line x1="12" x2="12" y1="17" y2="21"/>
                 </svg>
-                <span>Корпоративное хранилище</span>
-            </a>
-            <div class="subtitle">{% block subtitle %}Безопасная передача больших файлов{% endblock %}</div>
+            </button>
+            <button type="button" class="theme-btn" id="theme-light" title="Светлая тема" onclick="setTheme('light')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v2"/><path d="M12 20v2"/>
+                    <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+                    <path d="M2 12h2"/><path d="M20 12h2"/>
+                    <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+                </svg>
+            </button>
+            <button type="button" class="theme-btn" id="theme-dark" title="Тёмная тема" onclick="setTheme('dark')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                </svg>
+            </button>
         </div>
+    </header>
 
-        {% block content %}{% endblock %}
-    </div>
+    <main class="main-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">
+                    {% block icon %}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" x2="12" y1="15" y2="3"/>
+                    </svg>
+                    {% endblock %}
+                </div>
+                <h1 class="card-title">{% block card_title %}Хранилище файлов{% endblock %}</h1>
+                <p class="card-subtitle">{% block card_subtitle %}Безопасная передача вложений к письмам{% endblock %}</p>
+            </div>
 
-    <div class="footer">
-        &copy; 2026 Корпоративная почтовая служба &bull; Файлы хранятся временно
-    </div>
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        &copy; 2026 Bulwark Mail &bull; Временные файлы хранятся 28 дней
+    </footer>
+
+    <script>
+        function updateThemeButtons(current) {
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('theme-' + current);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem('bulwark_file_theme', theme);
+            applyTheme(theme);
+        }
+
+        function applyTheme(theme) {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (theme === 'dark' || (theme === 'system' && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateThemeButtons(theme);
+        }
+
+        // Initialize on page load
+        (function() {
+            const saved = localStorage.getItem('bulwark_file_theme') || 'system';
+            applyTheme(saved);
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                const current = localStorage.getItem('bulwark_file_theme') || 'system';
+                if (current === 'system') {
+                    applyTheme('system');
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

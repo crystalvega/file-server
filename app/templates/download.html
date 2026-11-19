@@ -1,84 +1,127 @@
 {% extends "base.html" %}
 
-{% block title %}Скачать файлы{% endblock %}
-{% block subtitle %}Вложенные файлы к письму{% endblock %}
+{% block title %}Скачивание вложений{% endblock %}
+
+{% block icon %}
+{% if is_authenticated %}
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+</svg>
+{% else %}
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+</svg>
+{% endif %}
+{% endblock %}
+
+{% block card_title %}
+{% if is_authenticated %}
+Вложенные файлы
+{% else %}
+Вход по коду доступа
+{% endif %}
+{% endblock %}
+
+{% block card_subtitle %}
+{% if is_authenticated %}
+Файлы доступны для безопасного скачивания
+{% else %}
+Для доступа к вложениям введите 6-значный PIN из полученного письма
+{% endif %}
+{% endblock %}
 
 {% block head %}
 <style>
-    .meta-box {
-        background: #f8fafc;
+    /* Meta summary bar */
+    .meta-bar {
+        background: var(--muted);
         border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 14px 16px;
+        border-radius: var(--radius);
+        padding: 10px 14px;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
+        font-size: 0.825rem;
     }
-    .meta-item {
-        font-size: 0.85rem;
-        color: var(--text-muted);
+    .meta-info {
+        color: var(--muted-foreground);
     }
-    .meta-item strong {
-        color: var(--text-main);
+    .meta-info strong {
+        color: var(--foreground);
     }
+
+    /* File List */
     .file-list {
         list-style: none;
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        margin-bottom: 24px;
+        gap: 10px;
+        margin-bottom: 20px;
     }
     .file-card {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 14px 16px;
-        background: #ffffff;
+        padding: 12px 14px;
+        background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 8px;
-        transition: border-color 0.15s, box-shadow 0.15s;
+        border-radius: var(--radius);
+        transition: border-color 0.15s ease, background-color 0.15s ease;
+        gap: 12px;
     }
     .file-card:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        border-color: var(--input-focus);
+        background: var(--secondary);
     }
-    .file-info {
+    .file-left {
         display: flex;
         align-items: center;
         gap: 12px;
-        overflow: hidden;
+        min-width: 0;
+        flex: 1;
     }
-    .file-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        background: #eff6ff;
-        color: var(--primary);
+    .file-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: var(--radius-sm);
+        background: var(--accent);
+        color: var(--accent-foreground);
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
     }
+    .file-details {
+        min-width: 0;
+        flex: 1;
+    }
     .file-name {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--text-main);
-        word-break: break-all;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--foreground);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .file-size {
-        font-size: 0.8rem;
-        color: var(--text-muted);
+        font-size: 0.775rem;
+        color: var(--muted-foreground);
         margin-top: 2px;
     }
+
+    /* PIN entry form */
     .pin-form {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 18px;
-        margin-top: 10px;
+        gap: 16px;
+        margin-top: 8px;
     }
     .pin-input {
         width: 220px;
@@ -86,30 +129,31 @@
         letter-spacing: 8px;
         text-align: center;
         padding: 10px 14px;
-        border: 2px solid var(--border);
-        border-radius: 8px;
+        border: 1.5px solid var(--input-border);
+        background: var(--input);
+        color: var(--foreground);
+        border-radius: var(--radius);
         outline: none;
         font-weight: 700;
-        font-family: monospace;
-        transition: border-color 0.15s;
+        font-family: var(--font-mono);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .pin-input:focus {
-        border-color: var(--primary);
+        border-color: var(--ring);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
     }
-    .pin-desc {
-        text-align: center;
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        line-height: 1.4;
+    .pin-actions {
+        width: 100%;
+        max-width: 260px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 {% if is_authenticated %}
-    <div class="meta-box">
-        <div class="meta-item">
-            Файлов: <strong>{{ files|length }}</strong> (общий объем: <strong>{{ total_size_formatted }}</strong>)
+    <div class="meta-bar">
+        <div class="meta-info">
+            Файлов: <strong>{{ files|length }}</strong> &bull; Общий объем: <strong>{{ total_size_formatted }}</strong>
         </div>
         <div class="badge badge-warning">
             ⏳ Истекает: {{ expires_date_str }}
@@ -119,20 +163,20 @@
     <ul class="file-list">
         {% for f in files %}
         <li class="file-card">
-            <div class="file-info">
-                <div class="file-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <div class="file-left">
+                <div class="file-icon-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
                         <polyline points="14 2 14 8 20 8"/>
                     </svg>
                 </div>
-                <div>
-                    <div class="file-name">{{ f.name }}</div>
+                <div class="file-details">
+                    <div class="file-name" title="{{ f.name }}">{{ f.name }}</div>
                     <div class="file-size">{{ f.formatted_size }}</div>
                 </div>
             </div>
-            <a href="{{ prefix }}/{{ upload_id }}/download/{{ f.id }}" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.85rem;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <a href="{{ prefix }}/{{ upload_id }}/download/{{ f.id }}" class="btn btn-secondary" style="padding: 7px 12px; font-size: 0.8rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
@@ -144,20 +188,20 @@
     </ul>
 
     {% if files|length > 1 %}
-        <a href="{{ prefix }}/{{ upload_id }}/download-all" class="btn btn-primary btn-block">
+        <a href="{{ prefix }}/{{ upload_id }}/download-all" class="btn btn-primary btn-block btn-lg">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
+                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                <path d="m3.3 7 8.7 5 8.7-5"/>
+                <path d="M12 22V12"/>
             </svg>
-            Скачать все файлы одним архивом (.ZIP)
+            Скачать все файлы архивом (.ZIP)
         </a>
     {% endif %}
 
 {% else %}
     {% if error %}
         <div class="alert alert-danger">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -165,11 +209,6 @@
             <span>{{ error }}</span>
         </div>
     {% endif %}
-
-    <div class="pin-desc">
-        🔒 Вложенные файлы защищены паролем.<br>
-        Введите 6-значный код доступа, указанный в полученном письме:
-    </div>
 
     <form method="POST" action="{{ prefix }}/{{ upload_id }}/auth" class="pin-form">
         <input 
@@ -179,14 +218,35 @@
             placeholder="000000" 
             maxlength="6" 
             pattern="[0-9]{6}" 
-            inputmode="numeric" 
             required 
             autofocus 
             autocomplete="one-time-code"
+            inputmode="numeric"
+            id="pinInputField"
         >
-        <button type="submit" class="btn btn-primary btn-block">
-            Открыть доступ к файлам
-        </button>
+        <div class="pin-actions">
+            <button type="submit" class="btn btn-primary btn-block">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Подтвердить код
+            </button>
+        </div>
     </form>
+
+    <script>
+        const pinInput = document.getElementById('pinInputField');
+        if (pinInput) {
+            pinInput.addEventListener('input', function() {
+                // Auto-submit when 6 digits are typed
+                const clean = this.value.replace(/[^0-9]/g, '');
+                this.value = clean;
+                if (clean.length === 6) {
+                    this.form.submit();
+                }
+            });
+        }
+    </script>
 {% endif %}
 {% endblock %}

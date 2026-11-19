@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title|default("Файлы не найдены") }}{% endblock %}
+{% block title %}{{ title|default(t.error_page_title) }}{% endblock %}
 
 {% block icon %}
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--destructive);">
@@ -10,8 +10,8 @@
 </svg>
 {% endblock %}
 
-{% block card_title %}{{ title|default("Файлы недоступны") }}{% endblock %}
-{% block card_subtitle %}{{ message|default("Срок временного хранения файлов (28 дней) истек, либо указана неверная ссылка.") }}{% endblock %}
+{% block card_title %}{{ title|default(t.error_not_found_title) }}{% endblock %}
+{% block card_subtitle %}{{ message|default(t.error_not_found_desc) }}{% endblock %}
 
 {% block content %}
 <div style="text-align: center; padding: 12px 0 6px;">
@@ -20,7 +20,7 @@
             <line x1="19" y1="12" x2="5" y2="12"/>
             <polyline points="12 19 5 12 12 5"/>
         </svg>
-        На главную страницу
+        {{ t.btn_back_home }}
     </a>
 </div>
 {% endblock %}

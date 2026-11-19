@@ -34,6 +34,7 @@ import zipfile
 from starlette.background import BackgroundTask
 
 from app.config import settings
+from app.i18n import detect_locale, get_translations, SUPPORTED_LOCALES
 from app.security import (
     create_session_token,
     generate_pin,
@@ -128,16 +129,16 @@ async def api_upload(
             logger.warning(f"Unauthorized upload attempt from {client_ip}")
             raise HTTPException(
                 status_code=401,
-                detail="Доступ запрещен. Неверный или отсутствует API-ключ авторизации.",
+                detail="Access denied. Invalid or missing API key.",
             )
 
     if not files:
-        raise HTTPException(status_code=400, detail="Не выбраны файлы для загрузки")
+        raise HTTPException(status_code=400, detail="No files selected for upload.")
 
     if len(files) > settings.MAX_UPLOAD_FILES:
         raise HTTPException(
             status_code=400,
-            detail=f"Превышено максимальное количество файлов ({settings.MAX_UPLOAD_FILES})",
+            detail=f"Exceeded maximum number of files ({settings.MAX_UPLOAD_FILES}).",
         )
 
     # Resolve TTL
@@ -178,7 +179,7 @@ async def api_upload(
                     delete_upload(upload_id)
                     raise HTTPException(
                         status_code=413,
-                        detail=f"Файл {safe_name} превышает лимит {settings.MAX_FILE_SIZE_MB} МБ",
+                        detail=f"File {safe_name} exceeds the maximum allowed size of {settings.MAX_FILE_SIZE_MB} MB.",
                     )
                 hasher.update(chunk)
                 out_f.write(chunk)
@@ -250,17 +251,23 @@ async def api_upload(
 @app.get(f"{settings.URL_PREFIX}/", response_class=HTMLResponse)
 @app.get(f"{settings.URL_PREFIX}", response_class=HTMLResponse)
 def index_info_page(request: Request):
+    t = get_translations(request)
+    locale = detect_locale(request)
     return templates.TemplateResponse(
         request=request,
         name="index.html",
         context={
             "prefix": settings.URL_PREFIX,
             "app_name": settings.APP_NAME,
+            "t": t,
+            "locale": locale,
         },
     )
 
 @app.get(f"{settings.URL_PREFIX}/{{upload_id}}", response_class=HTMLResponse)
 async def view_download_page(request: Request, upload_id: str):
+    t = get_translations(request)
+    locale = detect_locale(request)
     meta = await load_metadata(upload_id)
     if not meta or is_expired(meta):
         return templates.TemplateResponse(
@@ -268,8 +275,10 @@ async def view_download_page(request: Request, upload_id: str):
             name="error.html",
             context={
                 "prefix": settings.URL_PREFIX,
-                "title": "Файлы не найдены или удалены",
-                "message": "Срок временного хранения файлов (28 дней) истек, либо указана неверная ссылка.",
+                "t": t,
+                "locale": locale,
+                "title": t["error_not_found_title"],
+                "message": t["error_not_found_desc"],
             },
             status_code=404,
         )
@@ -283,8 +292,10 @@ async def view_download_page(request: Request, upload_id: str):
             context={
                 "upload_id": upload_id,
                 "prefix": settings.URL_PREFIX,
+                "t": t,
+                "locale": locale,
                 "is_authenticated": False,
-                "error": f"Слишком много неверных попыток. Доступ временно заблокирован на {rem_min} мин.",
+                "error": t("error_locked", minutes=rem_min),
             },
         )
 
@@ -295,7 +306,7 @@ async def view_download_page(request: Request, upload_id: str):
         is_authed = True
 
     expires_dt = datetime.datetime.fromtimestamp(meta["expires_at"])
-    expires_str = expires_dt.strftime("%d.%m.%Y в %H:%M")
+    expires_str = expires_dt.strftime("%d.%m.%Y, %H:%M UTC")
 
     return templates.TemplateResponse(
         request=request,
@@ -303,6 +314,8 @@ async def view_download_page(request: Request, upload_id: str):
         context={
             "upload_id": upload_id,
             "prefix": settings.URL_PREFIX,
+            "t": t,
+            "locale": locale,
             "is_authenticated": is_authed,
             "files": meta.get("files", []),
             "total_size_formatted": format_size(meta.get("total_size", 0)),
@@ -318,9 +331,11 @@ async def verify_download_pin(
     upload_id: str,
     pin: Annotated[str, Form()],
 ):
+    t = get_translations(request)
+    locale = detect_locale(request)
     meta = await load_metadata(upload_id)
     if not meta or is_expired(meta):
-        raise HTTPException(status_code=404, detail="Файлы не найдены")
+        raise HTTPException(status_code=404, detail=t["error_not_found_title"])
 
     if is_locked(meta):
         rem_min = max(1, int((meta["locked_until"] - time.time()) / 60))
@@ -330,8 +345,10 @@ async def verify_download_pin(
             context={
                 "upload_id": upload_id,
                 "prefix": settings.URL_PREFIX,
+                "t": t,
+                "locale": locale,
                 "is_authenticated": False,
-                "error": f"Доступ заблокирован на {rem_min} мин. из-за превышения числа попыток.",
+                "error": t("error_locked", minutes=rem_min),
             },
             status_code=403,
         )
@@ -341,8 +358,12 @@ async def verify_download_pin(
         await reset_failed_attempts(upload_id, meta)
         # Create session token
         token = create_session_token(upload_id)
+        # Preserve lang query param if present
+        target_url = f"{settings.URL_PREFIX}/{upload_id}"
+        if request.query_params.get("lang"):
+            target_url += f"?lang={request.query_params.get('lang')}"
         redirect_res = RedirectResponse(
-            url=f"{settings.URL_PREFIX}/{upload_id}",
+            url=target_url,
             status_code=status.HTTP_303_SEE_OTHER,
         )
         redirect_res.set_cookie(
@@ -356,9 +377,10 @@ async def verify_download_pin(
     else:
         attempts = await record_failed_attempt(upload_id, meta)
         rem_attempts = max(0, settings.RATE_LIMIT_ATTEMPTS - attempts)
-        error_msg = f"Неверный код доступа. Осталось попыток: {rem_attempts}."
         if rem_attempts == 0:
-            error_msg = f"Превышено количество попыток. Доступ заблокирован на {settings.RATE_LIMIT_LOCKOUT_MINUTES} минут."
+            error_msg = t("error_locked", minutes=settings.RATE_LIMIT_LOCKOUT_MINUTES)
+        else:
+            error_msg = t["error_invalid_pin"]
 
         return templates.TemplateResponse(
             request=request,
@@ -366,6 +388,8 @@ async def verify_download_pin(
             context={
                 "upload_id": upload_id,
                 "prefix": settings.URL_PREFIX,
+                "t": t,
+                "locale": locale,
                 "is_authenticated": False,
                 "error": error_msg,
             },
@@ -393,11 +417,11 @@ async def download_file(request: Request, upload_id: str, file_id: str):
             break
 
     if not target_file:
-        raise HTTPException(status_code=404, detail="Файл не найден в пакете")
+        raise HTTPException(status_code=404, detail="File not found in bundle.")
 
     file_path = get_upload_dir(upload_id) / "files" / file_id
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail="Файл не найден на диске")
+        raise HTTPException(status_code=404, detail="File not found on storage.")
 
     return FileResponse(
         path=file_path,
@@ -418,7 +442,7 @@ async def download_all_zip(request: Request, upload_id: str):
 
     files = meta.get("files", [])
     if not files:
-        raise HTTPException(status_code=404, detail="Нет файлов в пакете")
+        raise HTTPException(status_code=404, detail="No files in bundle.")
 
     files_dir = get_upload_dir(upload_id) / "files"
 
@@ -435,7 +459,7 @@ async def download_all_zip(request: Request, upload_id: str):
         if os.path.exists(tmp_zip.name):
             os.unlink(tmp_zip.name)
         logger.error(f"Failed to create ZIP for {upload_id}: {e}")
-        raise HTTPException(status_code=500, detail="Ошибка сборки архива")
+        raise HTTPException(status_code=500, detail="Failed to create archive.")
 
     zip_filename = f"files_{upload_id[:8]}.zip"
     return FileResponse(

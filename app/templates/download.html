@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Скачивание вложений{% endblock %}
+{% block title %}{{ t.download_page_title }}{% endblock %}
 
 {% block icon %}
 {% if is_authenticated %}
@@ -19,17 +19,17 @@
 
 {% block card_title %}
 {% if is_authenticated %}
-Вложенные файлы
+{{ t.download_title_auth }}
 {% else %}
-Вход по коду доступа
+{{ t.download_title_unauth }}
 {% endif %}
 {% endblock %}
 
 {% block card_subtitle %}
 {% if is_authenticated %}
-Файлы доступны для безопасного скачивания
+{{ t.download_subtitle_auth }}
 {% else %}
-Для доступа к вложениям введите 6-значный PIN из полученного письма
+{{ t.download_subtitle_unauth }}
 {% endif %}
 {% endblock %}
 
@@ -153,10 +153,10 @@
 {% if is_authenticated %}
     <div class="meta-bar">
         <div class="meta-info">
-            Файлов: <strong>{{ files|length }}</strong> &bull; Общий объем: <strong>{{ total_size_formatted }}</strong>
+            {{ t.meta_files_count }} <strong>{{ files|length }}</strong> &bull; {{ t.meta_total_size }} <strong>{{ total_size_formatted }}</strong>
         </div>
         <div class="badge badge-warning">
-            ⏳ Истекает: {{ expires_date_str }}
+            ⏳ {{ t.meta_expires }} {{ expires_date_str }}
         </div>
     </div>
 
@@ -181,7 +181,7 @@
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Скачать
+                {{ t.btn_download_file }}
             </a>
         </li>
         {% endfor %}
@@ -194,7 +194,7 @@
                 <path d="m3.3 7 8.7 5 8.7-5"/>
                 <path d="M12 22V12"/>
             </svg>
-            Скачать все файлы архивом (.ZIP)
+            {{ t.btn_download_all }}
         </a>
     {% endif %}
 
@@ -210,12 +210,12 @@
         </div>
     {% endif %}
 
-    <form method="POST" action="{{ prefix }}/{{ upload_id }}/auth" class="pin-form">
+    <form method="POST" action="{{ prefix }}/{{ upload_id }}/auth{% if request.query_params.get('lang') %}?lang={{ request.query_params.get('lang') }}{% endif %}" class="pin-form">
         <input 
             type="text" 
             name="pin" 
             class="pin-input" 
-            placeholder="000000" 
+            placeholder="{{ t.pin_placeholder }}" 
             maxlength="6" 
             pattern="[0-9]{6}" 
             required 
@@ -230,7 +230,7 @@
                     <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                Подтвердить код
+                {{ t.btn_verify_pin }}
             </button>
         </div>
     </form>

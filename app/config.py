@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Corporate File Share"
     DATA_DIR: str = "/data"
     PUBLIC_BASE_URL: str = ""  # e.g. "https://mail.szma-inform.ru"
-    URL_PREFIX: str = "/files"  # or "/file-server"
+    URL_PREFIX: str = os.getenv("URL_PREFIX", "/file-server")
     DEFAULT_TTL_DAYS: int = 28
     MAX_TTL_DAYS: int = 28
     MAX_FILE_SIZE_MB: int = 10240  # 10 GB limit per file

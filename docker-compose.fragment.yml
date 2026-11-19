@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     environment:
       - PUBLIC_BASE_URL=https://mail.${DOMAIN}
-      - URL_PREFIX=/files
+      - URL_PREFIX=/file-server
       - DEFAULT_TTL_DAYS=28
       - MAX_TTL_DAYS=28
       - MAX_FILE_SIZE_MB=10240
@@ -23,7 +23,7 @@ services:
       start_period: 5s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.files.rule=Host(`mail.${DOMAIN}`) && (PathPrefix(`/files`) || PathPrefix(`/file-server`))"
+      - "traefik.http.routers.files.rule=Host(`mail.${DOMAIN}`) && PathPrefix(`/file-server`)"
       - "traefik.http.routers.files.entrypoints=websecure"
       - "traefik.http.routers.files.tls=true"
       - "traefik.http.services.files.loadbalancer.server.port=8000"

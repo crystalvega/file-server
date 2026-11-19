@@ -9,7 +9,7 @@
 ## 🚀 Основные возможности
 
 1. **Защита ссылкой и PIN-кодом:**
-   - Каждая загрузка получает уникальный криптографический 32-значный идентификатор (`/files/{upload_id}`).
+   - Каждая загрузка получает уникальный криптографический 32-значный идентификатор (`/file-server/{upload_id}`).
    - Доступ защищен 6-значным цифровым PIN-кодом (генерируется автоматически или задается вручную).
    - Хеширование паролей с солью через **PBKDF2-HMAC-SHA256** (100 000 итераций).
    - **Защита от перебора (Brute-force protection):** блокировка на 15 минут при 5 неверных попытках ввода PIN-кода.
@@ -46,7 +46,7 @@ Content-Type: multipart/form-data
 {
   "success": true,
   "upload_id": "c8a419eb7b3749e7bdf4083d09a74421",
-  "url": "https://mail.szma-inform.ru/files/c8a419eb7b3749e7bdf4083d09a74421",
+  "url": "https://mail.szma-inform.ru/file-server/c8a419eb7b3749e7bdf4083d09a74421",
   "pin": "749201",
   "expires_at": "2026-12-16T12:00:00Z",
   "ttl_days": 28,
@@ -79,7 +79,7 @@ Content-Type: multipart/form-data
   • Проект_СЗМА_v2.dwg (50.0 МБ)
   • Видео_объекта.mp4 (100.0 МБ)
 
-👉 Ссылка для скачивания: https://mail.szma-inform.ru/files/c8a419eb7b3749e7bdf4083d09a74421
+👉 Ссылка для скачивания: https://mail.szma-inform.ru/file-server/c8a419eb7b3749e7bdf4083d09a74421
 🔑 Код доступа: 749201
 ```
 
@@ -96,7 +96,7 @@ Content-Type: multipart/form-data
     restart: unless-stopped
     environment:
       - PUBLIC_BASE_URL=https://mail.${DOMAIN}
-      - URL_PREFIX=/files
+      - URL_PREFIX=/file-server
       - DEFAULT_TTL_DAYS=28
       - MAX_TTL_DAYS=28
       - MAX_FILE_SIZE_MB=10240
@@ -110,7 +110,7 @@ Content-Type: multipart/form-data
       start_period: 5s
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.files.rule=Host(`mail.${DOMAIN}`) && (PathPrefix(`/files`) || PathPrefix(`/file-server`))"
+      - "traefik.http.routers.files.rule=Host(`mail.${DOMAIN}`) && PathPrefix(`/file-server`)"
       - "traefik.http.routers.files.entrypoints=websecure"
       - "traefik.http.routers.files.tls=true"
       - "traefik.http.services.files.loadbalancer.server.port=8000"
@@ -128,7 +128,7 @@ volumes:
 | Переменная | По умолчанию | Описание |
 |---|---|---|
 | `PUBLIC_BASE_URL` | *(из Host)* | Базовый публичный URL (например `https://mail.szma-inform.ru`) |
-| `URL_PREFIX` | `/files` | Префикс URL для страниц и API |
+| `URL_PREFIX` | `/file-server` | Префикс URL для страниц и API |
 | `DEFAULT_TTL_DAYS` | `28` | Срок хранения файлов по умолчанию |
 | `MAX_TTL_DAYS` | `28` | Максимально допустимый срок хранения |
 | `MAX_FILE_SIZE_MB` | `10240` | Максимальный размер одного файла (МБ) |

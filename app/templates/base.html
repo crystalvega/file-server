@@ -7,9 +7,19 @@
     <script>
         (function() {
             try {
-                const savedTheme = localStorage.getItem('bulwark_file_theme') || 'system';
+                // Read the exact theme set in Bulwark Webmail (stored under 'theme-applied' or in 'theme-store')
+                let bulwarkTheme = localStorage.getItem('theme-applied');
+                if (!bulwarkTheme) {
+                    try {
+                        const store = JSON.parse(localStorage.getItem('theme-store') || '{}');
+                        if (store && store.state) {
+                            bulwarkTheme = store.state.resolvedTheme || (store.state.theme !== 'system' ? store.state.theme : null);
+                        }
+                    } catch (e) {}
+                }
+                const currentTheme = bulwarkTheme || localStorage.getItem('bulwark_file_theme') || 'system';
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (savedTheme === 'dark' || (savedTheme === 'system' && prefersDark)) {
+                if (currentTheme === 'dark' || (currentTheme === 'system' && prefersDark)) {
                     document.documentElement.classList.add('dark');
                 } else {
                     document.documentElement.classList.remove('dark');
@@ -501,11 +511,20 @@
 
         // Initialize on page load
         (function() {
-            const saved = localStorage.getItem('bulwark_file_theme') || 'system';
+            let bulwarkTheme = localStorage.getItem('theme-applied');
+            if (!bulwarkTheme) {
+                try {
+                    const store = JSON.parse(localStorage.getItem('theme-store') || '{}');
+                    if (store && store.state) {
+                        bulwarkTheme = store.state.resolvedTheme || (store.state.theme !== 'system' ? store.state.theme : null);
+                    }
+                } catch (e) {}
+            }
+            const saved = bulwarkTheme || localStorage.getItem('bulwark_file_theme') || 'system';
             applyTheme(saved);
 
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-                const current = localStorage.getItem('bulwark_file_theme') || 'system';
+                const current = localStorage.getItem('theme-applied') || localStorage.getItem('bulwark_file_theme') || 'system';
                 if (current === 'system') {
                     applyTheme('system');
                 }
